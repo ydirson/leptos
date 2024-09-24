@@ -45,7 +45,7 @@ where
     R: Renderer + 'static
 {
     #[allow(clippy::type_complexity)]
-    view: <EitherOf3<(), Fal, <Defs::Match as MatchInterface<R>>::View> as Render<R>>::State,
+    view: <EitherOf3<(), Fal, OwnedView<<Defs::Match as MatchInterface<R>>::View, R>> as Render<R>>::State,
     id: Option<RouteMatchId>,
     owner: Owner,
     params: ArcRwSignal<ParamsMap>,
@@ -148,7 +148,7 @@ where
                             provide_context(params_memo);
                             provide_context(url);
                             provide_context(Matched(ArcMemo::from(matched)));
-                            view.choose().await
+                            OwnedView::new(view.choose().await)
                         }
                     })
                 }));
@@ -293,7 +293,7 @@ where
                             provide_context(Matched(ArcMemo::from(
                                 new_matched,
                             )));
-                            let view =
+                            let view = OwnedView::new(
                                 if let Some(set_is_routing) = set_is_routing {
                                     set_is_routing.set(true);
                                     let value =
@@ -303,7 +303,8 @@ where
                                     value
                                 } else {
                                     view.choose().await
-                                };
+                                },
+                            );
 
                             // only update the route if it's still the current path
                             // i.e., if we've navigated away before this has loaded, do nothing
@@ -572,7 +573,7 @@ where
                             provide_context(params_memo);
                             provide_context(url);
                             provide_context(Matched(ArcMemo::from(matched)));
-                            view.choose().await
+                            OwnedView::new(view.choose().await)
                         }
                     })
                 }));
